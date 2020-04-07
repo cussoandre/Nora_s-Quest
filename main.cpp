@@ -1,4 +1,4 @@
-//g++ -B olcPixelGameEngine.h -o NoraQuest main.cpp -lX11 -lGL -lpthread -lpng -lstdc++fs
+//g++ -o release/NoraQuest main.cpp -Bstatic olcPixelGameEngine.h -lX11 -lGL -lpthread -lpng -lstdc++fs
 
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
@@ -42,7 +42,7 @@
 #define cyanTestTile 3
 #define nextLevelTile 4
 
-#define MAPSNUM 7
+#define MAPSNUM 12
 
 #define characterABack "Assets/Sprites/CharacterA-Back-Border.png" //Nora
 #define characterAFront "Assets/Sprites/CharacterA-Front-Border.png"
@@ -58,8 +58,8 @@
 struct map
 {
     char tileMap[widthInTiles][heightInTiles];
-    int startX = 0;
-    int startY = 0;
+    int startX;
+    int startY;
     int startH = 100;
     int startM = 120;
 };
@@ -217,17 +217,21 @@ map populateRandomMap(uint32_t seed, int diff)
 {
     map tmp;
     srand(seed);
-    int startX = (rand() % widthInTiles);
-    int startY = (rand() % heightInTiles);
+    int startX = (rand() % (widthInTiles/4));
+    int startY = (rand() % (heightInTiles/4));
     for (int j = 0; j < heightInTiles; j++)
         for (int i = 0; i < widthInTiles; i++)
         {
             tmp.tileMap[i][j] = (rand()%diff == diff-1) +1;
         }
     tmp.tileMap[startX][startY] = grassTileA;
-    tmp.startX = startX;
-    tmp.startY = startY;
-    tmp.tileMap[rand() % widthInTiles][rand() % heightInTiles] = nextLevelTile;
+    tmp.tileMap[startX][startY+1] = grassTileA;
+    tmp.tileMap[startX+1][startY] = grassTileA;
+    tmp.tileMap[startX+1][startY+1] = grassTileA;
+
+    tmp.startX = startX * tileWidth;
+    tmp.startY = startY * tileHeight;
+    tmp.tileMap[(3*widthInTiles/4) + rand() % widthInTiles/4][(3*heightInTiles/4) + (rand() % (heightInTiles/4))] = nextLevelTile;
     return tmp;
 }
 
@@ -249,11 +253,8 @@ entityList randomEntityList(int gems)
 }
 
 map titleScreen;
-map firstLevel;
-map secondLevel;
-map thirdLevel;
-map fourthLevel;
-map fifthLevel;
+map firstLevel, secondLevel, thirdLevel, fourthLevel, fifthLevel, sixthLevel, seventhLevel, eightLevel, ninthLevel, tenthLevel;
+
 map winningLevel;
 
 char tileLevelTwo[widthInTiles][heightInTiles]=
@@ -262,24 +263,24 @@ char tileLevelTwo[widthInTiles][heightInTiles]=
     {1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     {1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     {1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     {1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1},
     {1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 2, 1, 1, 1, 1, 1, 2, 1, 2, 2, 1, 1, 1, 1, 1},
+    {1, 2, 2, 1, 1, 1, 1, 2, 1, 2, 2, 1, 1, 1, 1, 1},
     {1, 2, 1, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 1},
     {1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     {1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1},
     {1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 2, 2, 1, 1, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1},
+    {1, 2, 2, 2, 2, 1, 2, 1, 1, 2, 1, 1, 1, 1, 1, 1},
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    {1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     {1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -379,6 +380,12 @@ public:
         allMaps[3] = &thirdLevel;
         allMaps[4] = &fourthLevel;
         allMaps[5] = &fifthLevel;
+        allMaps[6] = &sixthLevel;
+        allMaps[7] = &seventhLevel;
+        allMaps[8] = &eightLevel;
+        allMaps[9] = &ninthLevel;
+        allMaps[10] = &tenthLevel;
+
         allMaps[MAPSNUM-1] = &winningLevel;
 
 		// Called once at the start, so create things here
@@ -391,10 +398,14 @@ public:
         titleScreen.startX = 292;
         titleScreen.startY = 21;
 
+        /*
         firstLevel = populateMap(barrenTile);
         firstLevel.startX = 32;
         firstLevel.startY = 32;
         firstLevel.tileMap[22][12] = nextLevelTile;
+        */
+
+        firstLevel = populateRandomMap(1011980, 4);
 
         secondLevel = mapFromArray(tileLevelTwo);
 
@@ -402,7 +413,17 @@ public:
         
         fourthLevel = populateRandomMap(17032002, 7);
 
-        fifthLevel = populateRandomMap(25051998, 10);
+        fifthLevel = populateRandomMap(25051998, 8);
+
+        sixthLevel = populateRandomMap(4031943, 9);
+        
+        seventhLevel = populateRandomMap(4051930, 10);
+
+        eightLevel = populateRandomMap(12345678, 15);
+
+        ninthLevel = populateRandomMap(88888888, 15);
+        
+        tenthLevel = populateRandomMap(22233311, 20);
 
         winningLevel = populateMap(cyanTestTile);
 
@@ -430,7 +451,8 @@ public:
         {
             DrawString(30, 30, "NORA'S QUEST", olc::VERY_DARK_MAGENTA, 4);
             DrawString(50,70, "a game by aki", olc::YELLOW, 2);
-            DrawString(70, 90, "created using the \"Pixel Game Engine\" \n by OneLoneCoder (NOT AFFILIATED)");
+            DrawString(75, 90, "created using the \"Pixel Game Engine\" \n by OneLoneCoder (NOT AFFILIATED)");
+            DrawString(0, 140, ">>> PRESS TAB TO START <<<", olc::WHITE, 2);
         }
         else
         {
