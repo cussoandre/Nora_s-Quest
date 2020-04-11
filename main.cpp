@@ -224,10 +224,10 @@ map populateRandomMap(uint32_t seed, int diff)
         {
             tmp.tileMap[i][j] = (rand()%diff == diff-1) +1;
         }
-    tmp.tileMap[startX][startY] = grassTileA;
     tmp.tileMap[startX][startY+1] = grassTileA;
-    tmp.tileMap[startX+1][startY] = grassTileA;
+    tmp.tileMap[startX][startY+2] = grassTileA;
     tmp.tileMap[startX+1][startY+1] = grassTileA;
+    tmp.tileMap[startX+1][startY+2] = grassTileA;
 
     tmp.startX = startX * tileWidth;
     tmp.startY = startY * tileHeight;
@@ -458,6 +458,7 @@ public:
         {
             DrawString(0, 0, "Mana  : \nHealth:", olc::VERY_DARK_MAGENTA, 1);
             DrawString(64, 0, std::to_string(player.getMana()) + "\n" + std::to_string(player.getHealthNat()), olc::WHITE, 1);
+            DrawString(400, 10, std::to_string(currentMapNum), olc::DARK_BLUE, 1);
         }
         drawEnts(eList);
         
